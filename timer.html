@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>Neon Timer</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<style>
+:root {
+    --blue: #00cfff;
+    --orange1: #ff9800;
+    --orange2: #ffb74d;
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    background: radial-gradient(circle at top, #111, #000 70%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "Segoe UI", sans-serif;
+}
+
+.circle-container {
+    position: relative;
+    width: 460px;
+    height: 460px;
+    filter: drop-shadow(0 0 25px rgba(0,207,255,.35));
+}
+
+svg {
+    transform: rotate(-90deg);
+}
+
+.bg-circle {
+    fill: #000;
+    stroke: #111;
+    stroke-width: 16;
+}
+
+.progress-circle {
+    fill: none;
+    stroke: var(--blue);
+    stroke-width: 16;
+    stroke-linecap: round;
+    stroke-dasharray: 1162;
+    stroke-dashoffset: 1162;
+    filter: drop-shadow(0 0 12px var(--blue));
+    transition: stroke-dashoffset 0.25s linear;
+}
+
+.inner-shadow {
+    position: absolute;
+    inset: 40px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 35px rgba(0,0,0,.9);
+    pointer-events: none;
+}
+
+.center-content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+}
+
+.time-box {
+    background: linear-gradient(135deg, var(--orange1), var(--orange2));
+    padding: 14px 36px;
+    border-radius: 14px;
+    font-size: 26px;
+    font-weight: 700;
+    color: #000;
+    box-shadow: 0 0 25px rgba(255,152,0,.7);
+    letter-spacing: 2px;
+}
+
+.quote-box {
+    max-width: 320px;
+    text-align: center;
+    color: #fff;
+    font-size: 14px;
+    line-height: 1.8;
+    opacity: 0.9;
+    min-height: 40px;
+    transition: opacity 0.4s ease;
+}
+
+button {
+    padding: 14px 42px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #000;
+    background: var(--blue);
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    box-shadow: 0 0 25px rgba(0,207,255,.8);
+    transition: 0.25s ease;
+}
+
+button:hover {
+    transform: scale(1.06);
+    box-shadow: 0 0 40px rgba(0,207,255,1);
+}
+
+button:active {
+    transform: scale(0.97);
+}
+</style>
+</head>
+
+<body>
+
+<div class="circle-container">
+    <svg width="460" height="460">
+        <circle class="bg-circle" cx="230" cy="230" r="185"></circle>
+        <circle class="progress-circle" cx="230" cy="230" r="185"></circle>
+    </svg>
+
+    <div class="inner-shadow"></div>
+
+    <div class="center-content">
+        <div class="time-box" id="time">00:00:00</div>
+        <div class="quote-box" id="quote"></div>
+        <button id="toggleBtn">Start</button>
+    </div>
+</div>
+
+<script>
+const sorenaQuotes = [
+  "من از دلِ تاریکی، نور خودمو ساختم",
+  "دردا معلم‌ان، اگه شاگردشون باشی",
+  "راه سخت بود، ولی برگشتن سخت‌تره",
+  "منو نشکن، من از ترک‌هام قوی‌ترم",
+  "سکوت من پر از فریاده",
+  "اگه افتادم، برای بلندتر پریدنه",
+  "با خودم جنگیدم، نه با دنیا",
+  "اینجا حقیقت تلخه، ولی واقعیه",
+  "من از هیچی شروع شدم",
+  "ذهن آزاد، قفس رو می‌شکنه",
+  "درد رو نوشتم که زنده بمونه",
+  "زمان دشمنه، ولی استاد خوبیه",
+  "من صدای شهرِ خفه‌ام",
+  "هر زخمی یه امضاست",
+  "راه من از دلِ ترسه",
+  "سایه‌هام از خودم جلوترن",
+  "من با شب آشنا شدم",
+  "هیچ قله‌ای بی‌درد نیست",
+  "باور کن سقوط هم حرکته",
+  "منو نفهمیدن، عادیه",
+  "جهان با من مهربون نبود",
+  "از خاکستر، اسم ساختم",
+  "فکر آزاد، خطرناکه",
+  "من ادامه‌ام، نه پایان",
+  "این صدا از عمقه",
+  "درد، زبان مشترکه",
+  "من حقیقتو فریاد نمی‌زنم، می‌نویسم",
+  "هر شب یه تولد جدیده",
+  "من حاصلِ جنگ با خودمم",
+  "خاموش، ولی زنده"
+];
+
+const progressCircle = document.querySelector('.progress-circle');
+const btn = document.getElementById('toggleBtn');
+const timeBox = document.getElementById('time');
+const quoteBox = document.getElementById('quote');
+
+const radius = 185;
+const circumference = 2 * Math.PI * radius;
+
+let timer = null;
+let quoteTimer = null;
+let seconds = 0;
+
+function formatTime(sec) {
+    const h = String(Math.floor(sec / 3600)).padStart(2, '0');
+    const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+    const s = String(sec % 60).padStart(2, '0');
+    return `${h}:${m}:${s}`;
+}
+
+function showRandomQuote() {
+    quoteBox.style.opacity = 0;
+    setTimeout(() => {
+        const random =
+          sorenaQuotes[Math.floor(Math.random() * sorenaQuotes.length)];
+        quoteBox.textContent = random;
+        quoteBox.style.opacity = 1;
+    }, 400);
+}
+
+btn.addEventListener('click', () => {
+    if (!timer) {
+        btn.textContent = 'Cancel';
+
+        showRandomQuote();
+        quoteTimer = setInterval(showRandomQuote, 10000);
+
+        timer = setInterval(() => {
+            seconds++;
+            timeBox.textContent = formatTime(seconds);
+
+            const progress = (seconds % 60) / 60;
+            progressCircle.style.strokeDashoffset =
+                circumference * (1 - progress);
+        }, 1000);
+
+    } else {
+        clearInterval(timer);
+        clearInterval(quoteTimer);
+        timer = null;
+        quoteTimer = null;
+        seconds = 0;
+        timeBox.textContent = '00:00:00';
+        quoteBox.textContent = '';
+        progressCircle.style.strokeDashoffset = circumference;
+        btn.textContent = 'Start';
+    }
+});
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+</body>
+  </html>
