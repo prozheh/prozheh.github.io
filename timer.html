@@ -2,12 +2,11 @@
 <html lang="fa">
 <head>
 <meta charset="UTF-8">
-<title>Neon Timer Pro</title>
+<title>Neon Timer + Manual Study Chart</title>
 
 <style>
 :root{
   --blue:#00cfff;
-  --orange:#ff9800;
 }
 
 body{
@@ -15,17 +14,89 @@ body{
   min-height:100vh;
   background:#000;
   display:flex;
-  flex-direction:column;
-  align-items:center;
   justify-content:center;
+  align-items:center;
   font-family:Segoe UI,sans-serif;
   color:#fff;
+  direction:rtl;
 }
 
+/* ===== Layout ===== */
+.dashboard{
+  display:flex;
+  gap:40px;
+  align-items:center;
+}
+
+@media(max-width:768px){
+  .dashboard{flex-direction:column;}
+}
+
+/* ===== Mini Study ===== */
+.mini-study{
+  width:220px;
+  background:#0b0b0b;
+  border-radius:18px;
+  padding:14px;
+  box-shadow:0 0 30px rgba(0,207,255,.25);
+}
+
+.mini-study h3{
+  margin:0 0 12px;
+  font-size:14px;
+  text-align:center;
+  color:var(--blue);
+}
+
+.mini-bars{
+  display:flex;
+  align-items:flex-end;
+  height:120px;
+  gap:5px;
+}
+
+.mini-bar{
+  flex:1;
+  background:linear-gradient(180deg,#00cfff,#006a88);
+  border-radius:6px 6px 0 0;
+  transition:.3s;
+}
+
+.mini-bar.zero{background:#222;}
+
+.mini-total{
+  margin-top:10px;
+  font-size:13px;
+  text-align:center;
+  opacity:.9;
+}
+
+/* ===== Controls ===== */
+.study-controls{
+  margin-top:12px;
+  display:flex;
+  gap:6px;
+}
+
+select,button{
+  flex:1;
+  padding:8px;
+  border:none;
+  border-radius:10px;
+  font-size:13px;
+}
+
+button{
+  background:var(--blue);
+  font-weight:600;
+  cursor:pointer;
+}
+
+/* ===== Timer ===== */
 .circle-container{
   position:relative;
-  width:min(95vw,600px);
-  height:min(95vw,600px);
+  width:min(90vw,500px);
+  height:min(90vw,500px);
 }
 
 svg{
@@ -45,8 +116,6 @@ svg{
   stroke:var(--blue);
   stroke-width:18;
   stroke-linecap:round;
-  stroke-dasharray:1319;
-  stroke-dashoffset:1319;
   filter:drop-shadow(0 0 15px var(--blue));
 }
 
@@ -65,180 +134,138 @@ svg{
   color:#000;
   padding:14px 36px;
   border-radius:14px;
-  font-size:28px;
+  font-size:26px;
   font-weight:700;
-  letter-spacing:2px;
 }
 
-.quote{
-  max-width:380px;
-  text-align:center;
-  font-size:14px;
-  line-height:1.9;
-  opacity:.9;
-  min-height:48px;
-  transition:.4s;
-}
+.buttons{display:flex;gap:12px;}
 
-.buttons{
-  display:flex;
-  gap:12px;
-}
-
-button{
+.timer-btn{
   padding:12px 30px;
   border:none;
   border-radius:26px;
-  font-size:16px;
+  font-size:15px;
   font-weight:600;
   cursor:pointer;
 }
 
 .start{background:var(--blue);}
-.cancel{background:#ff5252;}
 .stop{background:#ffc107;}
-.register{
-  margin-top:6px;
-  background:#333;
-  color:#fff;
-}
-
-.logs{
-  margin-top:22px;
-  width:90%;
-  max-width:600px;
-  font-size:14px;
-}
-.log{margin:4px 0;}
-
-/* 🔥 Confirm Modal */
-.modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.75);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:99;
-}
-.modal-box{
-  background:#111;
-  border-radius:16px;
-  padding:26px 32px;
-  text-align:center;
-  box-shadow:0 0 30px rgba(0,207,255,.4);
-}
-.modal-box p{
-  margin-bottom:20px;
-  font-size:16px;
-}
-.modal-box button{
-  margin:0 8px;
-}
-.yes{background:#ff5252;}
-.no{background:#444;color:#fff;}
+.reset{background:#ff5252;}
 </style>
 </head>
 
 <body>
 
-<div class="circle-container">
-<svg viewBox="0 0 520 520">
-  <circle class="bg-circle" cx="260" cy="260" r="210"/>
-  <circle class="progress-circle" cx="260" cy="260" r="210"/>
-</svg>
+<div class="dashboard">
 
-<div class="center">
-  <div class="time" id="time">00:00:00</div>
-  <div class="quote" id="quote"></div>
+  <!-- 📊 Mini Study -->
+  <div class="mini-study">
+    <h3>📊 مطالعه هفتگی</h3>
 
-  <div class="buttons" id="mainBtns">
-    <button class="start" id="startBtn">Start</button>
+    <div class="mini-bars" id="miniChart"></div>
+    <div class="mini-total" id="miniTotal">۰ ساعت</div>
+
+    <div class="study-controls">
+      <select id="day">
+        <option value="0">شنبه</option>
+        <option value="1">یکشنبه</option>
+        <option value="2">دوشنبه</option>
+        <option value="3">سه‌شنبه</option>
+        <option value="4">چهارشنبه</option>
+        <option value="5">پنجشنبه</option>
+        <option value="6">جمعه</option>
+      </select>
+
+      <select id="hour">
+        <option value="0">هیچی</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+        <option value="11">11</option>
+        <option value="12">12</option>
+      </select>
+
+      <button onclick="addStudy()">ثبت</button>
+    </div>
   </div>
 
-  <button class="register" id="regBtn">Registration</button>
-</div>
-</div>
+  <!-- ⏱ Timer -->
+  <div class="circle-container">
+    <svg viewBox="0 0 520 520">
+      <circle class="bg-circle" cx="260" cy="260" r="210"/>
+      <circle class="progress-circle" cx="260" cy="260" r="210"/>
+    </svg>
 
-<div class="logs" id="logs"></div>
+    <div class="center">
+      <div class="time" id="time">00:00:00</div>
 
-<!-- 🔴 Confirm Modal -->
-<div class="modal" id="confirmModal">
-  <div class="modal-box">
-    <p>مطمئنی می‌خوای تایمر رو لغو کنی؟</p>
-    <button class="yes" id="yesBtn">بله</button>
-    <button class="no" id="noBtn">نه</button>
+      <div class="buttons" id="btns">
+        <button class="timer-btn start" id="startBtn">Start</button>
+      </div>
+    </div>
   </div>
+
 </div>
 
 <script>
-// 🎤 بیت‌های سورنا
-const sorenaQuotes = [
-  "من از دلِ تاریکی، نور خودمو ساختم",
-  "دردا معلم‌ان، اگه شاگردشون باشی",
-  "راه سخت بود، ولی برگشتن سخت‌تره",
-  "منو نشکن، من از ترک‌هام قوی‌ترم",
-  "سکوت من پر از فریاده",
-  "اگه افتادم، برای بلندتر پریدنه",
-  "با خودم جنگیدم، نه با دنیا",
-  "اینجا حقیقت تلخه، ولی واقعیه",
-  "من از هیچی شروع شدم",
-  "ذهن آزاد، قفس رو می‌شکنه",
-  "درد رو نوشتم که زنده بمونه",
-  "زمان دشمنه، ولی استاد خوبیه",
-  "من صدای شهرِ خفه‌ام",
-  "هر زخمی یه امضاست",
-  "راه من از دلِ ترسه",
-  "سایه‌هام از خودم جلوترن",
-  "من با شب آشنا شدم",
-  "هیچ قله‌ای بی‌درد نیست",
-  "باور کن سقوط هم حرکته",
-  "منو نفهمیدن، عادیه",
-  "جهان با من مهربون نبود",
-  "از خاکستر، اسم ساختم",
-  "فکر آزاد، خطرناکه",
-  "من ادامه‌ام، نه پایان",
-  "این صدا از عمقه",
-  "درد، زبان مشترکه",
-  "من حقیقتو فریاد نمی‌زنم، می‌نویسم",
-  "هر شب یه تولد جدیده",
-  "من حاصلِ جنگ با خودمم",
-  "خاموش، ولی زنده"
-];
+/* ===== Mini Study Chart Logic (کاملاً مستقل) ===== */
+let week=[0,0,0,0,0,0,0];
+const miniChart=document.getElementById("miniChart");
+const miniTotal=document.getElementById("miniTotal");
+const daySelect=document.getElementById("day");
+const hourSelect=document.getElementById("hour");
 
+function renderChart(){
+  miniChart.innerHTML="";
+  let total=0;
+
+  week.forEach(h=>{
+    total+=h;
+    const b=document.createElement("div");
+    b.className="mini-bar"+(h===0?" zero":"");
+    b.style.height=(h/12*100)+"%";
+    miniChart.appendChild(b);
+  });
+
+  miniTotal.textContent=total+" ساعت";
+}
+
+function addStudy(){
+  const d=Number(daySelect.value);
+  const h=Number(hourSelect.value);
+  week[d]=h;  // جایگزین مقدار روز
+  renderChart();
+}
+
+/* ===== Timer Logic (کاملاً جدا) ===== */
 const timeBox=document.getElementById("time");
-const quoteBox=document.getElementById("quote");
-const mainBtns=document.getElementById("mainBtns");
-const logs=document.getElementById("logs");
+const btns=document.getElementById("btns");
 const circle=document.querySelector(".progress-circle");
-const modal=document.getElementById("confirmModal");
 
-let timer=null, quoteTimer=null;
-let seconds=0, paused=false, tCount=0;
-
-const r=210, c=2*Math.PI*r;
+let seconds=0,timer=null,paused=false;
+const r=210,c=2*Math.PI*r;
 circle.style.strokeDasharray=c;
 circle.style.strokeDashoffset=c;
 
 function format(s){
-  const h=String(Math.floor(s/3600)).padStart(2,'0');
-  const m=String(Math.floor((s%3600)/60)).padStart(2,'0');
-  const sec=String(s%60).padStart(2,'0');
+  const h=String(Math.floor(s/3600)).padStart(2,"0");
+  const m=String(Math.floor((s%3600)/60)).padStart(2,"0");
+  const sec=String(s%60).padStart(2,"0");
   return `${h}:${m}:${sec}`;
 }
 
-function showQuote(){
-  quoteBox.style.opacity=0;
-  setTimeout(()=>{
-    quoteBox.textContent =
-      sorenaQuotes[Math.floor(Math.random()*sorenaQuotes.length)];
-    quoteBox.style.opacity=1;
-  },400);
-}
+document.getElementById("startBtn").onclick=()=>{
+  btns.innerHTML=`
+    <button class="timer-btn reset" id="resetBtn">Reset</button>
+    <button class="timer-btn stop" id="stopBtn">Stop</button>`;
 
-function startTimer(){
-  showQuote();
-  quoteTimer=setInterval(showQuote,10000);
   timer=setInterval(()=>{
     if(!paused){
       seconds++;
@@ -246,54 +273,23 @@ function startTimer(){
       circle.style.strokeDashoffset=c*(1-(seconds%60)/60);
     }
   },1000);
-}
 
-function resetAll(){
-  clearInterval(timer);
-  clearInterval(quoteTimer);
-  timer=null; quoteTimer=null;
-  seconds=0; paused=false; tCount=0;
-  timeBox.textContent="00:00:00";
-  quoteBox.textContent="";
-  logs.innerHTML="";
-  circle.style.strokeDashoffset=c;
-  mainBtns.innerHTML=`<button class="start" id="startBtn">Start</button>`;
-  document.getElementById("startBtn").onclick=startHandler;
-}
+  document.getElementById("resetBtn").onclick=()=>{
+    clearInterval(timer);
+    seconds=0;paused=false;
+    timeBox.textContent="00:00:00";
+    circle.style.strokeDashoffset=c;
+    btns.innerHTML=`<button class="timer-btn start" id="startBtn">Start</button>`;
+    document.getElementById("startBtn").onclick=arguments.callee;
+  };
 
-function startHandler(){
-  mainBtns.innerHTML=`
-    <button class="cancel" id="cancelBtn">Cancel</button>
-    <button class="stop" id="stopBtn">Stop</button>`;
-  startTimer();
-
-  document.getElementById("cancelBtn").onclick=()=>modal.style.display="flex";
   document.getElementById("stopBtn").onclick=()=>{
     paused=!paused;
     document.getElementById("stopBtn").textContent=
       paused?"Resume":"Stop";
   };
-}
-
-document.getElementById("startBtn").onclick=startHandler;
-
-document.getElementById("regBtn").onclick=()=>{
-  tCount++;
-  const d=document.createElement("div");
-  d.className="log";
-  d.textContent=`T${tCount} → ${format(seconds)}`;
-  logs.appendChild(d);
-};
-
-// modal buttons
-document.getElementById("yesBtn").onclick=()=>{
-  modal.style.display="none";
-  resetAll();
-};
-document.getElementById("noBtn").onclick=()=>{
-  modal.style.display="none";
 };
 </script>
 
 </body>
-    </html>
+</html>
