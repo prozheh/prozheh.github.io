@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <title>Neon Timer + Manual Study Chart</title>
-
 <style>
 :root{--blue:#00cfff;}
 body{
@@ -62,7 +61,6 @@ svg{width:100%;height:100%;transform:rotate(-90deg);}
 .reset{background:#ff5252;}
 </style>
 </head>
-
 <body>
 
 <div class="dashboard">
@@ -169,7 +167,7 @@ const timeBox=document.getElementById("time");
 const btns=document.getElementById("btns");
 const circle=document.querySelector(".progress-circle");
 
-let seconds=0,timer=null,paused=false;
+let seconds=0, timer=null, paused=false;
 const r=210,c=2*Math.PI*r;
 circle.style.strokeDasharray=c;
 circle.style.strokeDashoffset=c;
@@ -181,11 +179,13 @@ function format(s){
   return `${h}:${m}:${sec}`;
 }
 
-document.getElementById("startBtn").onclick=()=>{
+// تابع شروع تایمر
+function startTimer(){
   btns.innerHTML=`
     <button class="timer-btn reset" id="resetBtn">Reset</button>
     <button class="timer-btn stop" id="stopBtn">Stop</button>`;
 
+  paused=false;
   timer=setInterval(()=>{
     if(!paused){
       seconds++;
@@ -194,21 +194,29 @@ document.getElementById("startBtn").onclick=()=>{
     }
   },1000);
 
-  document.getElementById("resetBtn").onclick=()=>{
-    clearInterval(timer);
-    seconds=0;paused=false;
-    timeBox.textContent="00:00:00";
-    circle.style.strokeDashoffset=c;
-    btns.innerHTML=`<button class="timer-btn start" id="startBtn">Start</button>`;
-    document.getElementById("startBtn").onclick=arguments.callee;
-  };
+  document.getElementById("resetBtn").onclick=resetTimer;
+  document.getElementById("stopBtn").onclick=stopTimer;
+}
 
-  document.getElementById("stopBtn").onclick=()=>{
-    paused=!paused;
-    document.getElementById("stopBtn").textContent=
-      paused?"Resume":"Stop";
-  };
-};
+// تابع ریست تایمر
+function resetTimer(){
+  clearInterval(timer);
+  seconds=0;
+  paused=false;
+  timeBox.textContent="00:00:00";
+  circle.style.strokeDashoffset=c;
+  btns.innerHTML=`<button class="timer-btn start" id="startBtn">Start</button>`;
+  document.getElementById("startBtn").onclick=startTimer;
+}
+
+// تابع توقف / ادامه تایمر
+function stopTimer(){
+  paused=!paused;
+  document.getElementById("stopBtn").textContent = paused ? "Resume" : "Stop";
+}
+
+// اتصال اولیه
+document.getElementById("startBtn").onclick=startTimer;
 </script>
 
 </body>
